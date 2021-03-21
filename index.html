@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <style type="text/css">
+      #map {
+        height: 100%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+        function initMap() {
+            let arr = [...(new URLSearchParams(window.location.search).values())][0].split(','); //Array of IP addresses
+            let objArr = []; //Array of location objects based on each IP in arr
+            let promiseArr = [] //Array of promises that fetch the location objects for objArr
+            let coordArr = [] //Array of coordinate objects (latitude and longitude)
+            for (let address of arr) {
+                promiseArr.push(
+                    fetch(`http://ip-api.com/json/${address}?fields=message,country,regionName,city,lat,lon,org,query`)
+                    .then(res => res.json())
+                    .then(res => objArr.push(res))
+                );
+            }
+            Promise.all(promiseArr).then(() => {
+                //Render map
+                map = new google.maps.Map(document.getElementById("map"), {
+                    center: { lat: 0, lng: 0 },
+                    zoom: 2
+                });
+                //For each object, add marker to map
+                objArr.forEach(obj => {
+                    console.log(obj);
+                    const contentString = `<h1>${obj.query}</h1><p>Country: ${obj.country}</p><p>Region: ${obj.regionName}</p><p>City: ${obj.city}</p>`
+                    const infowindow = new google.maps.InfoWindow({
+                        content: contentString,
+                    });
+                    const marker = new google.maps.Marker({
+                        position: { lat: obj.lat, lng: obj.lon },
+                        map,
+                        title: "Hello World!"
+                    });
+                    marker.addListener("click", () => {
+                        infowindow.open(map, marker);
+                    });
+                    coordArr.push({lat: obj.lat ? obj.lat : 0, lng: obj.lon ? obj.lon : 0 })
+                })
+            })
+            //Then draw a line between each point
+            .then(() => {
+                const flightPath = new google.maps.Polyline({
+                    path: coordArr,
+                    geodesic: true,
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2,
+                });
+                flightPath.setMap(map);
+            });
+        }
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCa-1KRPj1i6S_Cc0xcPppp88cYdnAI6Co&callback=initMap&libraries=&v=weekly"
+      async
+    ></script>
+  </body>
+</html>
