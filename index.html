@@ -24,7 +24,7 @@
                     fetch(`https://geo.ipify.org/api/v1?apiKey=at_gMz70cCV6FbPHLnP84T07VhF60rWh&ipAddress=${address}`)
                     .then(res => res.json())
                     .then(res => {
-                        if (!res.message) {
+                        if (res.location.country !== 'ZZ') {
                             objArr.push({address: address, country: res.location.country, region: res.location.region, city: res.location.city, lat: res.location.lat, lng: res.location.lng, isp: res.isp})
                         }
                     })
@@ -51,9 +51,7 @@
                     marker.addListener("click", () => {
                         infowindow.open(map, marker);
                     });
-                    if (obj.lat !== 0 && obj.lng !== 0) {
-                      coordArr.push({lat: obj.lat, lng: obj.lng});
-                    }
+                    coordArr.push({lat: obj.lat, lng: obj.lng});
                 })
             })
             //Then draw a line between each point
