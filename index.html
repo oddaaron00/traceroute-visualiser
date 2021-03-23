@@ -21,9 +21,13 @@
             let coordArr = [] //Array of coordinate objects (latitude and longitude)
             for (let address of arr) {
                 promiseArr.push(
-                    fetch(`http://ip-api.com/json/${address}?fields=message,country,regionName,city,lat,lon,org,query`)
+                    fetch(`https://geo.ipify.org/api/v1?apiKey=at_gMz70cCV6FbPHLnP84T07VhF60rWh&ipAddress=${address}`)
                     .then(res => res.json())
-                    .then(res => objArr.push(res))
+                    .then(res => {
+                        if (!res.message) {
+                            objArr.push({address: address, country: res.location.country, region: res.location.region, city: res.location.city, lat: res.location.lat, lng: res.location.lng, isp: res.isp})
+                        }
+                    })
                 );
             }
             Promise.all(promiseArr).then(() => {
@@ -35,19 +39,19 @@
                 //For each object, add marker to map
                 objArr.forEach(obj => {
                     console.log(obj);
-                    const contentString = `<h1>${obj.query}</h1><p>Country: ${obj.country}</p><p>Region: ${obj.regionName}</p><p>City: ${obj.city}</p>`
+                    const contentString = `<h1>${obj.address}</h1><p>Country: ${obj.country}</p><p>Region: ${obj.region}</p><p>City: ${obj.city}</p><p>ISP: ${obj.ISP}</p>`;
                     const infowindow = new google.maps.InfoWindow({
                         content: contentString,
                     });
                     const marker = new google.maps.Marker({
-                        position: { lat: obj.lat, lng: obj.lon },
+                        position: { lat: obj.lat, lng: obj.lng },
                         map,
                         title: "Hello World!"
                     });
                     marker.addListener("click", () => {
                         infowindow.open(map, marker);
                     });
-                    coordArr.push({lat: obj.lat ? obj.lat : 0, lng: obj.lon ? obj.lon : 0 })
+                    coordArr.push({lat: obj.lat ? obj.lat : 0, lng: obj.lng ? obj.lng : 0 })
                 })
             })
             //Then draw a line between each point
