@@ -4,6 +4,12 @@
     <title>Simple Map</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <style type="text/css">
+      #sidebar-container {
+        width: 20%;
+        float: left;
+        height: 100%;
+        overflow-y: scroll;
+      }
       #map {
         height: 100%;
       }
@@ -14,13 +20,24 @@
       }
     </style>
     <script>
+      function addToSidebar(loc) {
+        let sidebar = document.getElementById("sidebar-list");
+        let listElement = document.createElement("li");
+        let elementContainer = document.createElement("div");
+        for (const [key, val] of Object.entries(loc.item)) {
+          console.log(loc.item);
+          let textElement = document.createElement("p");
+          let textNode = document.createTextNode(`${key}: ${val}`);
+          sidebar.appendChild(listElement).appendChild(elementContainer).appendChild(textElement).appendChild(textNode);
+        }
+      }
       function initMap() {
         let objArr = []; //Array of IP addresses and their position in the route
         let itemArr = []; //Array of items fetched from the IP API
         let coordArr = []; //Array of coordinates and their position in the route
         arr = [...(new URLSearchParams(window.location.search).values())][0].split(','); //Array of IP addresses fetched from the URL parameters
         arr.map((address, index) => objArr[index] = {index: index, address: address});
-        let promiseArr = [] //Array of promises that fetch the location objects for objArr
+        let promiseArr = [] //Array of promises that fetch the location objects for itemArr
         for (let obj of objArr) {
             promiseArr.push(
               fetch(`https://geo.ipify.org/api/v1?apiKey=at_gMz70cCV6FbPHLnP84T07VhF60rWh&ipAddress=${obj.address}`)
@@ -64,6 +81,7 @@
             marker.addListener("click", () => {
               infowindow.open(map, marker);
             });
+            addToSidebar(loc);
             coordArr.push({index: loc.index, lat: loc.item.lat, lng: loc.item.lng});
           })
         })
@@ -83,8 +101,11 @@
     </script>
   </head>
   <body>
+    <div id="sidebar-container">
+      <ul id="sidebar-list">
+      </ul>
+    </div>
     <div id="map"></div>
-
     <script
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCa-1KRPj1i6S_Cc0xcPppp88cYdnAI6Co&callback=initMap&libraries=&v=weekly"
       async
