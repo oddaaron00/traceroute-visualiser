@@ -4,7 +4,7 @@ import sys, webbrowser, subprocess
 
 def main(traceIn):
     traceIn.pop()
-    url = "http://127.0.0.1:5500/index.html?vals="
+    url = "https://oddaaron00.github.io/traceroute-visualiser/?vals="
     for entry in traceIn:
         print(entry)
         split = entry.split(" ")
