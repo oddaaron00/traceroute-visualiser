@@ -14,58 +14,72 @@
       }
     </style>
     <script>
-        function initMap() {
-            let arr = [...(new URLSearchParams(window.location.search).values())][0].split(','); //Array of IP addresses
-            let objArr = []; //Array of location objects based on each IP in arr
-            let promiseArr = [] //Array of promises that fetch the location objects for objArr
-            let coordArr = [] //Array of coordinate objects (latitude and longitude)
-            for (let address of arr) {
-                promiseArr.push(
-                    fetch(`https://geo.ipify.org/api/v1?apiKey=at_gMz70cCV6FbPHLnP84T07VhF60rWh&ipAddress=${address}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.location.country !== 'ZZ') {
-                            objArr.push({address: address, country: res.location.country, region: res.location.region, city: res.location.city, lat: res.location.lat, lng: res.location.lng, isp: res.isp})
+      function initMap() {
+        let objArr = []; //Array of IP addresses and their position in the route
+        let itemArr = []; //Array of items fetched from the IP API
+        let coordArr = []; //Array of coordinates and their position in the route
+        arr = [...(new URLSearchParams(window.location.search).values())][0].split(','); //Array of IP addresses fetched from the URL parameters
+        arr.map((address, index) => objArr[index] = {index: index, address: address});
+        let promiseArr = [] //Array of promises that fetch the location objects for objArr
+        for (let obj of objArr) {
+            promiseArr.push(
+              fetch(`https://geo.ipify.org/api/v1?apiKey=at_gMz70cCV6FbPHLnP84T07VhF60rWh&ipAddress=${obj.address}`)
+              .then(res => res.json())
+              .then(res => {
+                  if (res.location.country !== 'ZZ') {
+                      itemArr.push({ 
+                        index: obj.index,
+                        item: {
+                          address: obj.address,
+                          country: res.location.country,
+                          region: res.location.region,
+                          city: res.location.city,
+                          lat: res.location.lat,
+                          lng: res.location.lng,
+                          isp: res.isp
                         }
-                    })
-                );
-            }
-            Promise.all(promiseArr).then(() => {
-                //Render map
-                map = new google.maps.Map(document.getElementById("map"), {
-                    center: { lat: 0, lng: 0 },
-                    zoom: 2
-                });
-                //For each object, add marker to map
-                objArr.forEach(obj => {
-                    console.log(obj);
-                    const contentString = `<h1>${obj.address}</h1><p>Country: ${obj.country}</p><p>Region: ${obj.region}</p><p>City: ${obj.city}</p><p>ISP: ${obj.isp}</p>`;
-                    const infowindow = new google.maps.InfoWindow({
-                        content: contentString,
-                    });
-                    const marker = new google.maps.Marker({
-                        position: { lat: obj.lat, lng: obj.lng },
-                        map,
-                        title: "Hello World!"
-                    });
-                    marker.addListener("click", () => {
-                        infowindow.open(map, marker);
-                    });
-                    coordArr.push({lat: obj.lat, lng: obj.lng});
-                })
-            })
-            //Then draw a line between each point
-            .then(() => {
-                const flightPath = new google.maps.Polyline({
-                    path: coordArr,
-                    geodesic: true,
-                    strokeColor: "#FF0000",
-                    strokeOpacity: 1.0,
-                    strokeWeight: 2,
-                });
-                flightPath.setMap(map);
-            });
+                      });
+                  }
+              })
+            );
         }
+        Promise.all(promiseArr).then(() => {
+          //Render map
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 0, lng: 0 },
+            zoom: 2
+          });
+          //For each object, add marker to map with the location info as an InfoWindow and the index in the route as the label
+          itemArr.forEach(loc => {
+            const contentString = `<h1>${loc.item.address}</h1><p>Country: ${loc.item.country}</p><p>Region: ${loc.item.region}</p><p>City: ${loc.item.city}</p><p>ISP: ${loc.item.isp}</p>`;
+            const infowindow = new google.maps.InfoWindow({
+              content: contentString,
+            });
+            const marker = new google.maps.Marker({
+              position: { lat: loc.item.lat, lng: loc.item.lng },
+              label: loc.index.toString(),
+              map: map,
+              title: loc.item.address
+            });
+            marker.addListener("click", () => {
+              infowindow.open(map, marker);
+            });
+            coordArr.push({index: loc.index, lat: loc.item.lat, lng: loc.item.lng});
+          })
+        })
+        //Then draw a line between each point
+        .then(() => {
+          coordArr.sort((a, b) => a.index - b.index);
+          const flightPath = new google.maps.Polyline({
+            path: coordArr,
+            geodesic: false,
+            strokeColor: "#FF0000",
+            strokeOpacity: 1.0,
+            strokeWeight: 2,
+          });
+          flightPath.setMap(map);
+        });
+      }
     </script>
   </head>
   <body>
