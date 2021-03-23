@@ -39,7 +39,7 @@
                 //For each object, add marker to map
                 objArr.forEach(obj => {
                     console.log(obj);
-                    const contentString = `<h1>${obj.address}</h1><p>Country: ${obj.country}</p><p>Region: ${obj.region}</p><p>City: ${obj.city}</p><p>ISP: ${obj.ISP}</p>`;
+                    const contentString = `<h1>${obj.address}</h1><p>Country: ${obj.country}</p><p>Region: ${obj.region}</p><p>City: ${obj.city}</p><p>ISP: ${obj.isp}</p>`;
                     const infowindow = new google.maps.InfoWindow({
                         content: contentString,
                     });
